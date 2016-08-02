@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// TODO: create a ring of go processes that listen for messages
-// when they receive a message, they call the next process in the ring
-// todo: time how long it takes to send M messages around N processes
 func main() {
 	sendChan := make(chan int)
 	done := make(chan bool)
