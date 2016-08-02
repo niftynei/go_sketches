@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // TODO: create a ring of go processes that listen for messages
 // when they receive a message, they call the next process in the ring
@@ -13,7 +16,7 @@ func main() {
 		SendMsg: sendChan,
 		Done:    done,
 	}
-	for i := 1; i < 5; i++ {
+	for i := 1; i < 10000; i++ {
 		rcvChan := sendChan
 		sendChan = make(chan int)
 		process := Process{
@@ -25,10 +28,15 @@ func main() {
 
 	firstProcess.RcvMsg = sendChan
 	go firstProcess.Loop()
-	sendChan <- 100
+
+	start := time.Now()
+	sendChan <- 10000
 
 	// will wait for the loop to be done
 	<-done
+	elapsed := time.Since(start)
+	fmt.Printf("Loop took %s\n", elapsed)
+
 }
 
 type Process struct {
@@ -40,20 +48,16 @@ type Process struct {
 
 func (p *Process) Loop() {
 	for {
-		select {
-		case msg := <-p.RcvMsg:
-			if p.IsFirst {
-				msg--
-				if msg < 0 {
-					fmt.Println("Finished! Exiting...")
-					p.Done <- true
-				} else {
-					fmt.Println("Finished a loop, starting on", msg)
-				}
+		msg := <-p.RcvMsg
+		if p.IsFirst {
+			msg--
+			if msg < 0 {
+				fmt.Println("Finished! Exiting...")
+				p.Done <- true
+			} else {
+				fmt.Println("Finished a loop, starting on", msg)
 			}
-			p.SendMsg <- msg
-		default:
-			// do nothing
 		}
+		p.SendMsg <- msg
 	}
 }
